@@ -31,75 +31,6 @@ logger = logging.getLogger(__name__)
 
 
 # =============================================================================
-# SECTION 1: DATA LOADING & INTERFACE
-# =============================================================================
-
-class DataLoader:
-    """
-    Interface for loading NASA data from other team members.
-    Expects data to be provided in standard formats.
-    """
-    
-    @staticmethod
-    def load_from_csv(filepath: str) -> pd.DataFrame:
-        """
-        Load NASA data from CSV file.
-        
-        Args:
-            filepath: Path to CSV file
-            
-        Returns:
-            DataFrame with NASA data
-        """
-        # TODO: Implement CSV loading with proper date parsing
-        pass
-    
-    @staticmethod
-    def load_from_json(filepath: str) -> pd.DataFrame:
-        """
-        Load NASA data from JSON file.
-        
-        Args:
-            filepath: Path to JSON file
-            
-        Returns:
-            DataFrame with NASA data
-        """
-        # TODO: Implement JSON loading
-        pass
-    
-    @staticmethod
-    def load_from_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Accept data directly from another module/team member.
-        
-        Args:
-            df: DataFrame with NASA data
-            
-        Returns:
-            Validated DataFrame
-        """
-        # TODO: Add validation logic
-        return df.copy()
-    
-    @staticmethod
-    def validate_data(df: pd.DataFrame, 
-                     required_columns: List[str]) -> bool:
-        """
-        Validate that incoming data has required columns and proper format.
-        
-        Args:
-            df: Input DataFrame
-            required_columns: List of required column names
-            
-        Returns:
-            True if valid, raises exception otherwise
-        """
-        # TODO: Implement validation
-        pass
-
-
-# =============================================================================
 # SECTION 2: DATA PREPROCESSING
 # =============================================================================
 
@@ -115,10 +46,12 @@ class DataPreprocessor:
     
     def __init__(self):
         self.scaler = None  # For normalization if needed
+        self.original_columns = None  # Store original column names
         
     def prepare_for_prophet(self, df: pd.DataFrame, 
                            date_column: str, 
-                           target_column: str) -> pd.DataFrame:
+                           target_column: str,
+                           handle_missing: bool = True) -> pd.DataFrame:
         """
         Transform raw data into Prophet-compatible format.
         
@@ -126,51 +59,168 @@ class DataPreprocessor:
             df: Input DataFrame
             date_column: Name of the date/time column
             target_column: Name of the target variable column
+            handle_missing: Whether to automatically handle missing values
             
         Returns:
-            DataFrame with 'ds' and 'y' columns
+            DataFrame with 'ds' and 'y' columns, sorted and cleaned
         """
-        # TODO: Implement data transformation
-        # 1. Rename columns to 'ds' and 'y'
-        # 2. Convert dates to datetime
-        # 3. Handle missing values
-        # 4. Sort by date
-        # 5. Remove duplicates
-        pass
+        logger.info(f"Preparing data for Prophet (input shape: {df.shape})")
+        
+        # Store original columns for reference
+        self.original_columns = df.columns.tolist()
+        
+        # Create a copy to avoid modifying original
+        result = df.copy()
+        
+        # 1. Convert date column to datetime
+        if not pd.api.types.is_datetime64_any_dtype(result[date_column]):
+            logger.info(f"Converting {date_column} to datetime")
+            result[date_column] = pd.to_datetime(result[date_column], errors='coerce')
+        
+        # 2. Check for invalid dates
+        invalid_dates = result[date_column].isna().sum()
+        if invalid_dates > 0:
+            logger.warning(f"Found {invalid_dates} invalid dates, removing them")
+            result = result.dropna(subset=[date_column])
+        
+        # 3. Ensure target column is numeric
+        if not pd.api.types.is_numeric_dtype(result[target_column]):
+            logger.info(f"Converting {target_column} to numeric")
+            result[target_column] = pd.to_numeric(result[target_column], errors='coerce')
+        
+        # 4. Create Prophet format with 'ds' and 'y' columns
+        prophet_df = pd.DataFrame({
+            'ds': result[date_column],
+            'y': result[target_column]
+        })
+        
+        # 5. Handle missing values in target
+        missing_count = prophet_df['y'].isna().sum()
+        if missing_count > 0:
+            logger.warning(f"Found {missing_count} missing values in target column")
+            if handle_missing:
+                prophet_df = self.handle_missing_values(prophet_df, method='interpolate')
+            else:
+                logger.info("Dropping rows with missing target values")
+                prophet_df = prophet_df.dropna(subset=['y'])
+        
+        # 6. Sort by date
+        prophet_df = prophet_df.sort_values('ds').reset_index(drop=True)
+        
+        # 7. Remove duplicates (keep first occurrence)
+        duplicates = prophet_df.duplicated(subset=['ds']).sum()
+        if duplicates > 0:
+            logger.warning(f"Found {duplicates} duplicate dates, keeping first occurrence")
+            prophet_df = prophet_df.drop_duplicates(subset=['ds'], keep='first')
+        
+        # 8. Check for reasonable data
+        if len(prophet_df) < 2:
+            raise ValueError(f"Insufficient data after preprocessing: only {len(prophet_df)} rows")
+        
+        logger.info(f"Data prepared for Prophet (output shape: {prophet_df.shape})")
+        logger.info(f"Date range: {prophet_df['ds'].min()} to {prophet_df['ds'].max()}")
+        logger.info(f"Target range: {prophet_df['y'].min():.2f} to {prophet_df['y'].max():.2f}")
+        
+        return prophet_df
     
     def handle_missing_values(self, df: pd.DataFrame, 
-                             method: str = 'interpolate') -> pd.DataFrame:
+                             method: str = 'interpolate',
+                             column: str = 'y') -> pd.DataFrame:
         """
         Handle missing values in time series data.
         
         Args:
             df: Input DataFrame
-            method: 'interpolate', 'forward_fill', 'backward_fill', 'mean'
+            method: 'interpolate', 'forward_fill', 'backward_fill', 'mean', 'drop'
+            column: Column to handle missing values for (default: 'y')
             
         Returns:
             DataFrame with missing values handled
         """
-        # TODO: Implement missing value handling
-        pass
+        result = df.copy()
+        missing_before = result[column].isna().sum()
+        
+        if missing_before == 0:
+            return result
+        
+        logger.info(f"Handling {missing_before} missing values using method: {method}")
+        
+        if method == 'interpolate':
+            # Linear interpolation for time series
+            result[column] = result[column].interpolate(method='linear', limit_direction='both')
+        elif method == 'forward_fill':
+            result[column] = result[column].fillna(method='ffill')
+        elif method == 'backward_fill':
+            result[column] = result[column].fillna(method='bfill')
+        elif method == 'mean':
+            result[column] = result[column].fillna(result[column].mean())
+        elif method == 'drop':
+            result = result.dropna(subset=[column])
+        else:
+            raise ValueError(f"Unknown method: {method}")
+        
+        missing_after = result[column].isna().sum()
+        logger.info(f"Missing values after handling: {missing_after}")
+        
+        return result
     
     def detect_outliers(self, df: pd.DataFrame, 
-                       column: str, 
+                       column: str = 'y',
                        method: str = 'iqr',
-                       threshold: float = 1.5) -> pd.DataFrame:
+                       threshold: float = 1.5,
+                       action: str = 'flag') -> pd.DataFrame:
         """
         Detect and optionally remove outliers.
         
         Args:
             df: Input DataFrame
-            column: Column to check for outliers
+            column: Column to check for outliers (default: 'y')
             method: 'iqr' (Interquartile Range) or 'zscore'
-            threshold: Multiplier for outlier detection
+            threshold: Multiplier for outlier detection (IQR: 1.5 standard, Z-score: 3.0 standard)
+            action: 'flag' (add column), 'remove' (filter out), or 'cap' (cap at bounds)
             
         Returns:
-            DataFrame with outlier indicators or removed outliers
+            DataFrame with outliers handled based on action
         """
-        # TODO: Implement outlier detection
-        pass
+        result = df.copy()
+        
+        if method == 'iqr':
+            # Interquartile Range method
+            Q1 = result[column].quantile(0.25)
+            Q3 = result[column].quantile(0.75)
+            IQR = Q3 - Q1
+            lower_bound = Q1 - threshold * IQR
+            upper_bound = Q3 + threshold * IQR
+            outlier_mask = (result[column] < lower_bound) | (result[column] > upper_bound)
+            
+        elif method == 'zscore':
+            # Z-score method
+            mean = result[column].mean()
+            std = result[column].std()
+            z_scores = np.abs((result[column] - mean) / std)
+            outlier_mask = z_scores > threshold
+            lower_bound = mean - threshold * std
+            upper_bound = mean + threshold * std
+            
+        else:
+            raise ValueError(f"Unknown method: {method}. Use 'iqr' or 'zscore'")
+        
+        outlier_count = outlier_mask.sum()
+        logger.info(f"Detected {outlier_count} outliers using {method} method (threshold={threshold})")
+        
+        if outlier_count > 0:
+            if action == 'flag':
+                result['is_outlier'] = outlier_mask
+            elif action == 'remove':
+                result = result[~outlier_mask].reset_index(drop=True)
+                logger.info(f"Removed {outlier_count} outliers")
+            elif action == 'cap':
+                result[column] = result[column].clip(lower=lower_bound, upper=upper_bound)
+                logger.info(f"Capped {outlier_count} outliers to bounds [{lower_bound:.2f}, {upper_bound:.2f}]")
+            else:
+                raise ValueError(f"Unknown action: {action}. Use 'flag', 'remove', or 'cap'")
+        
+        return result
     
     def add_external_regressors(self, df: pd.DataFrame, 
                                regressors: Dict[str, pd.Series]) -> pd.DataFrame:
@@ -183,48 +233,137 @@ class DataPreprocessor:
         - Seasonal indicators
         
         Args:
-            df: Prophet-formatted DataFrame
+            df: Prophet-formatted DataFrame (must have 'ds' column)
             regressors: Dictionary of regressor name -> series
             
         Returns:
             DataFrame with additional regressor columns
         """
-        # TODO: Implement regressor addition
-        pass
+        result = df.copy()
+        
+        for name, series in regressors.items():
+            if len(series) != len(df):
+                raise ValueError(f"Regressor '{name}' length ({len(series)}) doesn't match data length ({len(df)})")
+            
+            result[name] = series.values
+            logger.info(f"Added regressor: {name}")
+        
+        return result
     
     def resample_timeseries(self, df: pd.DataFrame, 
                            frequency: str = 'D',
-                           aggregation: str = 'mean') -> pd.DataFrame:
+                           aggregation: str = 'mean',
+                           date_column: str = 'ds',
+                           value_column: str = 'y') -> pd.DataFrame:
         """
         Resample time series to different frequency.
         
         Args:
-            df: Input DataFrame with datetime index
+            df: Input DataFrame with datetime column
             frequency: 'D' (daily), 'W' (weekly), 'M' (monthly), 'H' (hourly)
-            aggregation: 'mean', 'sum', 'median', 'max', 'min'
+            aggregation: 'mean', 'sum', 'median', 'max', 'min', 'first', 'last'
+            date_column: Name of date column (default: 'ds')
+            value_column: Name of value column to aggregate (default: 'y')
             
         Returns:
             Resampled DataFrame
         """
-        # TODO: Implement resampling
-        pass
+        result = df.copy()
+        
+        # Ensure date column is datetime
+        if not pd.api.types.is_datetime64_any_dtype(result[date_column]):
+            result[date_column] = pd.to_datetime(result[date_column])
+        
+        # Set date as index for resampling
+        result = result.set_index(date_column)
+        
+        # Perform resampling based on aggregation method
+        agg_functions = {
+            'mean': 'mean',
+            'sum': 'sum',
+            'median': 'median',
+            'max': 'max',
+            'min': 'min',
+            'first': 'first',
+            'last': 'last'
+        }
+        
+        if aggregation not in agg_functions:
+            raise ValueError(f"Unknown aggregation: {aggregation}. Use one of {list(agg_functions.keys())}")
+        
+        resampled = result[value_column].resample(frequency).agg(agg_functions[aggregation])
+        
+        # Convert back to DataFrame with proper columns
+        result_df = pd.DataFrame({
+            date_column: resampled.index,
+            value_column: resampled.values
+        }).reset_index(drop=True)
+        
+        # Remove any NaN values that might have been created
+        result_df = result_df.dropna()
+        
+        logger.info(f"Resampled from {len(df)} to {len(result_df)} rows (frequency: {frequency}, aggregation: {aggregation})")
+        
+        return result_df
     
     def create_lag_features(self, df: pd.DataFrame, 
-                           column: str, 
-                           lags: List[int]) -> pd.DataFrame:
+                           column: str = 'y',
+                           lags: List[int] = [1, 7, 30]) -> pd.DataFrame:
         """
         Create lagged features for time series analysis.
+        Can be used as additional regressors in Prophet.
         
         Args:
             df: Input DataFrame
-            column: Column to create lags for
-            lags: List of lag periods (e.g., [1, 7, 30])
+            column: Column to create lags for (default: 'y')
+            lags: List of lag periods (e.g., [1, 7, 30] for 1-day, 1-week, 1-month)
             
         Returns:
             DataFrame with additional lag columns
         """
-        # TODO: Implement lag feature creation
-        pass
+        result = df.copy()
+        
+        for lag in lags:
+            lag_col_name = f'{column}_lag_{lag}'
+            result[lag_col_name] = result[column].shift(lag)
+            logger.info(f"Created lag feature: {lag_col_name}")
+        
+        # Note: First rows will have NaN for lag features
+        nan_count = result[f'{column}_lag_{max(lags)}'].isna().sum()
+        logger.warning(f"Lag features created {nan_count} NaN values in first rows")
+        
+        return result
+    
+    def aggregate_by_location(self, df: pd.DataFrame,
+                             date_column: str,
+                             value_column: str,
+                             lat_column: str = 'latitude',
+                             lon_column: str = 'longitude',
+                             aggregation: str = 'mean') -> pd.DataFrame:
+        """
+        Aggregate multiple locations to a single time series.
+        Useful when you have spatial data and want a regional average.
+        
+        Args:
+            df: Input DataFrame with location and value data
+            date_column: Name of date column
+            value_column: Name of value column to aggregate
+            lat_column: Name of latitude column
+            lon_column: Name of longitude column
+            aggregation: 'mean', 'median', 'sum', 'max', 'min'
+            
+        Returns:
+            DataFrame with aggregated values by date
+        """
+        logger.info(f"Aggregating {len(df)} rows by date using {aggregation}")
+        
+        # Group by date and aggregate
+        agg_dict = {value_column: aggregation}
+        result = df.groupby(date_column).agg(agg_dict).reset_index()
+        
+        logger.info(f"Aggregated to {len(result)} unique dates")
+        
+        return result
 
 
 # =============================================================================
