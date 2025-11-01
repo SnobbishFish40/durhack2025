@@ -1,20 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DurHack 2025</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
   <div class="background-image"></div>
-  <h1>🌾 DurHack 2025 – Farmer Dashboard</h1>
+  <div id="block-top"></div>
+  <div id="navbar">
+    <h1>🌾 GroundTruth</h1>
+  </div>
+  
+  <main>
+    <div class="section-1 mainblock">
+      <h1 class="text">Environmental Forecast <span>The Farmer's Dashboard</span></h1>
+    </div>
+    <div class="section-2 mainblock">
+      <form id="geoForm">
+        <input type="text" id="location" placeholder="Enter postcode or place..." required>
+        <button type="submit">Find Coordinates</button>
+      </form>
 
-  <form id="geoForm">
-    <input type="text" id="location" placeholder="Enter postcode or place..." required>
-    <button type="submit">Find Coordinates</button>
-  </form>
+      <pre id="output"></pre>
+    </div>
 
-  <pre id="output"></pre>
+  </main>
+
+  <div id="block-bottom"></div>
 
   <script>
     const form = document.getElementById('geoForm');
@@ -30,5 +44,6 @@
       document.getElementById('output').textContent = JSON.stringify(data, null, 2);
     });
   </script>
+
 </body>
 </html>

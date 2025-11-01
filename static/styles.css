@@ -1,17 +1,105 @@
+:root {
+  --main-1: #E0A437;
+  --main-2: rgba(42, 64, 51, 0.2);
+  --main-3: rgba(10, 5, 5, 0.4);
+  --nav-height: 12vh;
+  --text-base: ghostwhite;
+}
+
+html {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
 body {
   font-family: sans-serif;
-  margin: 2rem;
   background: #f8faf8;
+  margin: 0 !important;
+  top: 0; left: 0;
+  color: var(--text-base);
+  max-width: 100%;
 }
 
 .background-image {
-  background-image: url("static/images/farm.jpg");
-  background-size: cover;        /* scales image to fill div */
-  background-position: center;   /* centers the image */
-  background-repeat: no-repeat;  /* prevents tiling */
-  width: 1000px; height: 1000px;
+  background-image: url("images/farm.jpeg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: fixed; top: 0;
+  width: 100vw; height: 100vh;
+  margin: 0; padding: 0;
+  z-index: -1;
 }
 
+.background-image::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+#block-top {
+  content: "";
+  height: calc(var(--nav-height) + 5vh);
+  width: 100%;
+}
+
+#navbar {
+  position: fixed; top: 0;
+  width: 100%; height: var(--nav-height);
+  background-color: var(--main-2);
+  border-bottom: 2px solid var(--main-1);
+  backdrop-filter: blur(2px);
+  h1 { 
+    color: var(--main-1);
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  }
+}
+
+#block-bottom {
+  position: relative;
+  content: "";
+  width: 200px;
+  height: 200px;
+  top: 200vh;
+}
+
+
+/* ------------------------------------------- SETUP DONE --------------------------------------------------------- */
+
+
+main {
+  padding: 2.5vw;
+  max-width: 90vw;
+}
+
+.mainblock {
+  width: 100%;
+  padding: auto;
+  .text { text-align: center; }
+}
+
+
+.section-1 {
+  height: 50vh;
+  h1 {
+    font-family: monospace;
+    font-size: 4rem;
+    span {
+      display: block; 
+      font-size: 0.66em;
+      font-style: italic;
+    }
+  }
+}
+
+
+.section-2 {
+  height: 50vh; padding: 20px;
+  border-radius: 10px;
+  background-color: var(--main-3);
+  border: 1px groove ghostwhite;
+}
 
 input, button {
   padding: 0.5rem;
