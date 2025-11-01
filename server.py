@@ -1,5 +1,4 @@
 import requests
-from datetime import datetime, timedelta
 import os
 import pandas as pd
 from anthropic import Anthropic
@@ -32,12 +31,13 @@ def get_nasa_csv(lat, lon, startDate, endDate):
         'format': 'CSV'
     }
     
-    response = requests.get(url, params=params, timeout=30)
-    response.raise_for_status()
+    # response = requests.get(url, params=params, timeout=30)
+    # response.raise_for_status()
     
-    data = StringIO(response.text)
-    pureData = pd.read_csv(data, skiprows=13) # Skip header
+    # data = StringIO(response.text)
+    # pureData = pd.read_csv(data, skiprows=13) # Skip header
 
+    return "date, temp, ndvi\n2020-01-01,12.3,0.41\n2020-01-08,11.7,0.44"
     return pureData
 
 

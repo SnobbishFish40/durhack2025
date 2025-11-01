@@ -18,32 +18,17 @@
       <h1 class="text">Environmental Forecast <span>The Farmer's Dashboard</span></h1>
     </div>
     <div class="section-2 mainblock">
-      <form id="geoForm">
-        <input type="text" id="location" placeholder="Enter postcode or place..." required>
-        <button type="submit">Find Coordinates</button>
+      <form id="forecastForm">
+        <input type="text" id="postcode" placeholder="Enter postcode..." required>
+        <input type="text" id="crop" placeholder="Crop type..." required>
+        <button type="submit">Get Forecast</button>
       </form>
-
       <pre id="output"></pre>
     </div>
 
   </main>
 
   <div id="block-bottom"></div>
-
-  <script>
-    const form = document.getElementById('geoForm');
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
-      const query = document.getElementById('location').value;
-      const res = await fetch('/api/geocode', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({query})
-      });
-      const data = await res.json();
-      document.getElementById('output').textContent = JSON.stringify(data, null, 2);
-    });
-  </script>
-
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

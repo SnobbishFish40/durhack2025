@@ -1,5 +1,5 @@
 :root {
-  --main-1: #E0A437;
+  --main-1: #C4A437;
   --main-2: rgba(42, 64, 51, 0.2);
   --main-3: rgba(10, 5, 5, 0.4);
   --nav-height: 12vh;
@@ -19,6 +19,12 @@ body {
   color: var(--text-base);
   max-width: 100%;
 }
+
+body::-webkit-scrollbar { background: rgb(0,0,0); width: 0; }
+/* body::-webkit-scrollbar-thumb {
+  background: linear-gradient(pink, white);
+  border-radius: 20px;
+} */
 
 .background-image {
   background-image: url("images/farm.jpeg");
@@ -95,10 +101,42 @@ main {
 
 
 .section-2 {
-  height: 50vh; padding: 20px;
+  position: relative;
+  height: auto; width: 50vw;
+  padding: 20px; left: 20vw;
   border-radius: 10px;
   background-color: var(--main-3);
-  border: 1px groove ghostwhite;
+  border: 0.5px groove ghostwhite;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  form {
+    padding: auto;
+    button { 
+      display: block;
+      background: var(--main-3);
+      color: antiquewhite;
+      margin: auto;
+      margin-top: 2vh;
+    }
+
+    input {
+      background: rgba(250, 250, 250, 0.2);
+      color: var(--text-base);
+      border-radius: 2.5px;
+      backdrop-filter: blur(5px);
+    }
+  }
+
+  pre {
+    content: "3ed";
+    position: relative;
+    top: 20vh;
+    background: rgba(10, 20, 20, 0.7);
+    padding: 1rem;
+    border-radius: 8px;
+  }
 }
 
 input, button {
@@ -106,8 +144,3 @@ input, button {
   margin: 0.2rem;
 }
 
-pre {
-  background: #eee;
-  padding: 1rem;
-  border-radius: 8px;
-}
