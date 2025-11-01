@@ -3,10 +3,21 @@ body {
   margin: 2rem;
   background: #f8faf8;
 }
+
+.background-image {
+  background-image: url("static/images/farm.jpg");
+  background-size: cover;        /* scales image to fill div */
+  background-position: center;   /* centers the image */
+  background-repeat: no-repeat;  /* prevents tiling */
+  width: 1000px; height: 1000px;
+}
+
+
 input, button {
   padding: 0.5rem;
   margin: 0.2rem;
 }
+
 pre {
   background: #eee;
   padding: 1rem;
