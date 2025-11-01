@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import requests
+from datetime import datetime, timedelta
+from server.py import get_nasa_csv
 
 app = Flask(__name__)
 
@@ -31,6 +33,23 @@ def geocode():
         "lon": res["lon"],
         "display_name": res["display_name"]
     })
+
+@app.route('/api/submitRequest', methods['POST'])
+def submitRequest():
+    longitude = request.form['lon']
+    latitude = request.form['lat']
+    cropType = request.form['crop']
+    
+    end_date = datetime.now()
+    start_date = '20200101' 
+
+    data_csv = get_nasa_csv(latitude, longitude, start_date, end_date)
+
+    # Here pass data to main analysis function which will return a processed csv
+    # Then pass to request_llm_analysis and finally render the result
+
+
+    print(data_csv)
 
 if __name__ == '__main__':
     app.run(debug=True)
