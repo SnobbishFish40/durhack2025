@@ -1,7 +1,8 @@
 from flask import Flask, render_template, request, jsonify
 import requests
 from datetime import datetime, timedelta
-from server.py import get_nasa_csv
+from dotenv import load_dotenv
+from server import get_nasa_csv
 
 app = Flask(__name__)
 
@@ -34,7 +35,7 @@ def geocode():
         "display_name": res["display_name"]
     })
 
-@app.route('/api/submitRequest', methods['POST'])
+@app.route('/api/submitRequest', methods=['POST'])
 def submitRequest():
     longitude = request.form['lon']
     latitude = request.form['lat']

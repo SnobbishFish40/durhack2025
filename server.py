@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import os
 import pandas as pd
 from anthropic import Anthropic
+from dotenv import load_dotenv
 
 load_dotenv()
 NASA_KEY = os.getenv('NASA_API_KEY')
