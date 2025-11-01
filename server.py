@@ -1,6 +1,8 @@
 import requests
 from datetime import datetime, timedelta
 import os
+import pandas as pd
+from anthropic import Anthropic
 
 load_dotenv()
 NASA_KEY = os.getenv('NASA_API_KEY')
@@ -36,3 +38,15 @@ def get_nasa_csv(lat, lon, startDate, endDate):
     pureData = pd.read_csv(data, skiprows=13) # Skip header
 
     return pureData
+
+
+def request_llm_analysis(stats, crop_type):
+    client = Anthropic(api_key=CLAUDE_KEY)
+
+    response = client.messages.create(
+        model="claude-sonnet-4-5-2025-09-29",
+        messages=[
+            {"role": "user", "content": f"Here is a CSV file full of statistical predictions about conditions relating to agricultural success in a region :\n{stats}\nPlease break down clearly what implications this may have on {crop_type} growth in the area."}
+        ]
+    )
+    return response.content[0].text)
