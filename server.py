@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 NASA_KEY = os.getenv('NASA_API_KEY')
-CLAUDE_KEY = os.getenv('ANTHROPIC_API_KEY')
+LLM_KEY = os.getenv('LLM_API_KEY')
 
 def get_nasa_csv(lat, lon, startDate, endDate):
     url = "https://power.larc.nasa.gov/api/temporal/daily/point"
@@ -19,8 +19,8 @@ def get_nasa_csv(lat, lon, startDate, endDate):
             'T2M_MIN',          # Min temp
             'PRECTOTCORR',      # Precipitation
             'RH2M',             # Humidity
-            'GWETPROF',         # Surface soil wetness ⭐
-            'GWETROOT',         # Root zone soil wetness ⭐
+            'GWETPROF',         # Surface soil wetness
+            'GWETROOT',         # Root zone soil wetness
             'ALLSKY_SFC_PAR_TOT', # Light for photosynthesis
             'WS2M'              # Wind speed
         ]),
@@ -42,12 +42,19 @@ def get_nasa_csv(lat, lon, startDate, endDate):
 
 
 def request_llm_analysis(stats, crop_type):
-    client = Anthropic(api_key=CLAUDE_KEY)
+   headers = {
+        "Authorization": f"Bearer {LLM_KEY}",
+        "Content-Type": "application/json"
+    } 
 
-    response = client.messages.create(
-        model="claude-sonnet-4-5-2025-09-29",
-        messages=[
-            {"role": "user", "content": f"Here is a CSV file full of statistical predictions about conditions relating to agricultural success in a region :\n{stats}\nPlease break down clearly what implications this may have on {crop_type} growth in the area."}
-        ]
-    )
-    return response.content[0].text()
+    data = {
+        "model": "anthropic/claude-sonnet-4.5",
+        "message": [
+            {"role": "user", "content": f"Attached is some data and predictions based on that data about conditions in a specific region in which someone wants to grow some {crop}. Please analyse the predictions and explain what the implications of these future conditions could be. {stats}"}
+        ],
+        "max_tokens": 300
+    }
+    
+    response = requests.post(url, headers=headers, json=data)
+
+    return response.json()
