@@ -26,3 +26,6 @@ Thumbs.db
 
 # Streamlit
 .streamlit/secrets.toml
+
+
+nasa_data.csv
