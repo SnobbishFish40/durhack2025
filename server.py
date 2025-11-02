@@ -3,7 +3,6 @@ import os
 import pandas as pd
 from anthropic import Anthropic
 from dotenv import load_dotenv
-from io import StringIO
 
 load_dotenv()
 NASA_KEY = os.getenv('NASA_API_KEY')
@@ -32,15 +31,10 @@ def get_nasa_csv(lat, lon, startDate, endDate):
         'format': 'CSV'
     }
     
-    # response = requests.get(url, params=params, timeout=30)
-    # response.raise_for_status()
+    response = requests.get(url, params=params, timeout=30)
+    response.raise_for_status()
     
-    # data = StringIO(response.text)
-    # pureData = pd.read_csv(data, skiprows=13) # Skip header
-
-    return "date, temp, data stuff\n2020-01-01,12.3,0.41\n2020-01-08,11.7,0.44"
-    return pureData
-
+    return response.text
 
 def request_llm_analysis(stats, crop_type):
     headers = {
@@ -59,3 +53,6 @@ def request_llm_analysis(stats, crop_type):
     response = requests.post(url, headers=headers, json=data)
 
     return response.json()
+
+
+get_nasa_csv(50, 50, 20240101, 20250801)
