@@ -41,20 +41,26 @@ def submit_request():
         lat = float(payload["lat"])
         lon = float(payload["lon"])
         crop = payload["crop"]
+        predictionPeriod = payload["prediction"]
     except (KeyError, ValueError):
         return jsonify({"error": "Expected JSON: { lat, lon, crop }"}), 400
+
+    if predictionPeriod == "":
+        predictionPeriod = "30"
+
 
     end_date = datetime.now().strftime("%Y%m%d")
     start_date = "20200101"
 
-    # TODO: implement this
     data_csv = get_nasa_csv(lat, lon, start_date, end_date)
     filename = "nasa_data.csv"
 
     with open(filename, 'w', newline='') as f:
         f.write(data_csv)
 
-    statistics = run_analysis(filename, 30)
+
+
+    statistics = run_analysis(filename, int(predictionPeriod))
     print(statistics)
     llm_response = request_llm_analysis(statistics, crop, lat, lon)
     llm_text = llm_response['choices'][0]['message']['content']
