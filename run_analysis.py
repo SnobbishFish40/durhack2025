@@ -43,7 +43,7 @@ def run_analysis(filepath: str, forecast_periods: int = 365):
     forecast = forecaster.predict(periods=forecast_periods, frequency='D', include_history=True)
     return forecast
 
-run_analysis('precipitation.csv', forecast_periods=365)
+#run_analysis('precipitation.csv', forecast_periods=365)
 
 #visualizer = ForecastVisualizer()
 #visualizer.plot_forecast(forecaster.model, forecast, historical_data=prophet_data, 
