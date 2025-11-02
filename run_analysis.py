@@ -28,20 +28,20 @@ def run_analysis(filepath: str, forecast_periods: int = 365):
             target_column=TARGET_COLUMN, 
             year_column='YEAR', 
             doy_column='DOY'
-    )
+        )
 
-    forecaster = ProphetForecaster(
-        seasonality_mode=SEASONALITY_MODE,
-        changepoint_prior_scale=CHANGEPOINT_PRIOR
-    )
-    forecaster.create_model(
-        yearly_seasonality=True,
-        weekly_seasonality=False,
+        forecaster = ProphetForecaster(
+            seasonality_mode=SEASONALITY_MODE,
+            changepoint_prior_scale=CHANGEPOINT_PRIOR
+        )
+        forecaster.create_model(
+            yearly_seasonality=True,
+            weekly_seasonality=False,
 #    growth='flat'  # Flat trend - focuses on seasonality only
-    )
-    forecaster.fit(prophet_data)
-    forecast = forecaster.predict(periods=forecast_periods, frequency='D', include_history=True)
-    return forecast
+        )
+        forecaster.fit(prophet_data)
+        forecast = forecaster.predict(periods=forecast_periods, frequency='D', include_history=True)
+        return forecast
 
 #run_analysis('precipitation.csv', forecast_periods=365)
 
