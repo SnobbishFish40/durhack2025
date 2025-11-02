@@ -2,8 +2,8 @@ from flask import Flask, render_template, request, jsonify
 import requests
 from datetime import datetime
 from dotenv import load_dotenv
-from server import get_nasa_csv
-# from analysis import 
+from server import get_nasa_csv, request_llm_analysis
+from run_analysis import run_analysis
 
 app = Flask(__name__)
 
@@ -48,7 +48,13 @@ def submit_request():
 
     # TODO: implement this
     data_csv = get_nasa_csv(lat, lon, start_date, end_date)
-    print(data_csv)
+    
+    statistics = run_analysis(data_csv)
+
+    llm_response = request_llm_analysis(statistics, crop)
+
+    return llm_response['message']['content']
+
 
     # Return a clear object
     return jsonify({
