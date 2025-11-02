@@ -4,6 +4,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from server import get_nasa_csv, request_llm_analysis
 from run_analysis import run_analysis
+from markdown import markdown
 
 app = Flask(__name__)
 
@@ -55,9 +56,10 @@ def submit_request():
 
     statistics = run_analysis(filename)
     print(statistics)
-    llm_response = request_llm_analysis(statistics, crop)
-    print(llm_response)
-    return llm_response
+    llm_response = request_llm_analysis(statistics, crop, lat, lon)
+    llm_text = llm_response['choices'][0]['message']['content']
+    print(llm_text)
+    return jsonify({"text": llm_text})
 
 
     # Return a clear object

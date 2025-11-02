@@ -36,7 +36,7 @@ def get_nasa_csv(lat, lon, startDate, endDate):
     
     return response.text
 
-def request_llm_analysis(stats, crop):
+def request_llm_analysis(stats, crop, lat, lon):
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {LLM_KEY}",
@@ -46,9 +46,9 @@ def request_llm_analysis(stats, crop):
     data = {
         "model": "anthropic/claude-sonnet-4.5",
         "messages": [
-            {"role": "user", "content": f"Attached is some data and predictions based on that data about conditions in a specific region in which someone wants to grow some {crop}. You are a agricultural analyst, you must be able to provide this farmer with both analysis and actionable recommendations. Please analyse the predictions and explain in extreme detail what the implications of these future conditions could be - i.e a full professional report. {stats}"}
+            {"role": "user", "content": f"Attached is some data and predictions based on that data about conditions in a specific region (Latitude: {lat}, Longitude: {lon}) in which someone wants to grow some {crop}. You are a agricultural analyst, you must be able to provide this farmer with both analysis and actionable recommendations. Please analyse the predictions and explain in extreme detail what the implications of these future conditions could be - i.e a full professional report. {stats}"}
         ],
-        "max_tokens": 300
+        "max_tokens": 20000
     }
  
     response = requests.post(url, headers=headers, json=data)

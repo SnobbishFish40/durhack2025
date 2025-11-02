@@ -53,8 +53,6 @@ def run_analysis(filepath: str, forecast_periods: int = 365):
         all_forecasts[f'{TARGET_COLUMN}_lower'] = forecast['yhat_lower'].values
         all_forecasts[f'{TARGET_COLUMN}_upper'] = forecast['yhat_upper'].values
     
-    # Save to CSV
-    all_forecasts.to_csv(output_csv, index=False)
     return all_forecasts
 
 #run_analysis('precipitation.csv', forecast_periods=365)

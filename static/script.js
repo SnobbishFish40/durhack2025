@@ -29,11 +29,31 @@ form.addEventListener('submit', async (e) => {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ lat, lon, crop })
     });
+    // if (!res.ok) throw new Error('Submit failed');
+    // const llm = await res.json();
+    // console.log("LLM:", llm.choices[0].message.content)
+    // const report = llm.choices[0].message.content
+    // Output(report, "LLM");
+
     if (!res.ok) throw new Error('Submit failed');
-    const llm = await res.json();
-    console.log("LLM:", llm.choices[0].message.content)
-    const report = llm.choices[0].message.content
-    Output(report, "LLM");
+    const llm_resp = await res.json();
+    const llm = llm_resp.text
+    console.log("LLM:\n", llm)
+    // OpenAI-style:
+    // const md = llm.choices?.[0]?.message?.content ?? String(llm);
+
+    // Anthropic-style (if you use Claude):
+    const md = llm.content?.[0]?.text ?? String(llm);
+
+    const html = DOMPurify.sanitize(marked.parse(md));
+
+    console.log("HTML\n", html)
+
+    const child = document.createElement('div');
+    child.className = "LLM";
+    child.innerHTML = html;
+    Out.insertBefore(child, querier);
+
     querier.classList.remove("hidden");
     Out.classList.remove("hidden");
   } catch (err) {

@@ -165,12 +165,7 @@ input, button {
   }
 }
 
-.LLM {
-  background: rgba(45, 124, 55, 0.6);
-  color: floralwhite;
-  border-top-left-radius: 0 !important;
-  margin-right: 10vw;
-}
+
 
 .query {
   background: var(--main-3);
@@ -184,3 +179,15 @@ input, button {
   color: whitesmoke;
 }
 
+.LLM { line-height: 1.6; }
+.LLM h1, .LLM h2, .LLM h3 { margin: 1.2em 0 .4em; }
+.LLM ul { padding-left: 1.25rem; }
+.LLM code { background: rgba(0,0,0,.06); padding: .1rem .35rem; border-radius: 4px; }
+.LLM pre { background: rgba(0,0,0,.06); padding: .8rem; border-radius: 6px; overflow:auto; }
+.LLM {
+  background: rgba(45, 124, 55, 0.6);
+  color: floralwhite;
+  border-top-left-radius: 0 !important;
+  margin-right: 15vw;
+  font-size: 0.8em;
+}
