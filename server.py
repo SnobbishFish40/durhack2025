@@ -54,5 +54,3 @@ def request_llm_analysis(stats, crop_type):
 
     return response.json()
 
-
-get_nasa_csv(50, 50, 20240101, 20250801)
