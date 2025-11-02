@@ -3,6 +3,7 @@ import requests
 from datetime import datetime
 from dotenv import load_dotenv
 from server import get_nasa_csv
+# from analysis import 
 
 app = Flask(__name__)
 
@@ -47,7 +48,6 @@ def submit_request():
 
     # TODO: implement this
     data_csv = get_nasa_csv(lat, lon, start_date, end_date)
-    # data_csv = "date,temp,ndvi\n2020-01-01,12.3,0.41\n2020-01-08,11.7,0.44"
     print(data_csv)
 
     # Return a clear object
